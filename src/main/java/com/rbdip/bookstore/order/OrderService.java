@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
 
     private final ProductRepository productRepository;
+    private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final PricingCalculator pricingCalculator = new PricingCalculator();
@@ -20,11 +21,13 @@ public class OrderService {
 
     public OrderService(
             ProductRepository productRepository,
+            CustomerRepository customerRepository,
             OrderRepository orderRepository,
             OrderItemRepository orderItemRepository,
             OrderValidator orderValidator,
             OrderEmailService orderEmailService) {
         this.productRepository = productRepository;
+        this.customerRepository = customerRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.orderValidator = orderValidator;
@@ -48,14 +51,16 @@ public class OrderService {
         BigDecimal total = pricingCalculator.calculateOrderTotal(
                 lineItems, request.customerType() == null ? "regular" : request.customerType(), request.couponCode());
 
-        Order order = new Order(
-                request.customerFullName(), request.customerAddress(), request.customerPhone(), "new");
-        order = orderRepository.save(order);
+        customerRepository.insertIfAbsent(
+                request.customerFullName(), request.customerAddress(), request.customerPhone());
+        Customer customer = customerRepository.findByFullNameAndAddressAndPhone(
+                request.customerFullName(), request.customerAddress(), request.customerPhone());
+        Order order = orderRepository.save(new Order(customer, "new"));
 
         for (int i = 0; i < products.size(); i++) {
             Product product = products.get(i);
             int quantity = lineItems.get(i).quantity();
-            orderItemRepository.save(new OrderItem(order.getId(), product.getName(), product.getPrice(), quantity));
+            orderItemRepository.save(new OrderItem(order.getId(), product, quantity));
         }
 
         orderEmailService.sendConfirmationEmail(request.customerFullName(), order.getId(), total);
