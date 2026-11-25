@@ -51,10 +51,13 @@ public class OrderService {
         BigDecimal total = pricingCalculator.calculateOrderTotal(
                 lineItems, request.customerType() == null ? "regular" : request.customerType(), request.couponCode());
 
+        String[] name = request.customerFullName().split(" ", 2);
+        String firstName = name[0];
+        String lastName = name.length == 2 ? name[1] : null;
         customerRepository.insertIfAbsent(
-                request.customerFullName(), request.customerAddress(), request.customerPhone());
-        Customer customer = customerRepository.findByFullNameAndAddressAndPhone(
-                request.customerFullName(), request.customerAddress(), request.customerPhone());
+                firstName, lastName, request.customerAddress(), request.customerPhone());
+        Customer customer = customerRepository.findByFirstNameAndLastNameAndAddressAndPhone(
+                firstName, lastName, request.customerAddress(), request.customerPhone());
         Order order = orderRepository.save(new Order(customer, "new"));
 
         for (int i = 0; i < products.size(); i++) {

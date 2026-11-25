@@ -9,12 +9,13 @@ public interface CustomerRepository extends Repository<Customer, Long> {
 
     @Modifying
     @Query(value = """
-            INSERT INTO customers (full_name, address, phone)
-            VALUES (:fullName, :address, :phone)
-            ON CONFLICT (full_name, address, phone) DO NOTHING
+            INSERT INTO customers (first_name, last_name, address, phone)
+            VALUES (:firstName, :lastName, :address, :phone)
+            ON CONFLICT DO NOTHING
             """, nativeQuery = true)
     void insertIfAbsent(
-            @Param("fullName") String fullName, @Param("address") String address, @Param("phone") String phone);
+            @Param("firstName") String firstName, @Param("lastName") String lastName, @Param("address") String address, @Param("phone") String phone);
 
-    Customer findByFullNameAndAddressAndPhone(String fullName, String address, String phone);
+    Customer findByFirstNameAndLastNameAndAddressAndPhone(
+            String firstName, String lastName, String address, String phone);
 }

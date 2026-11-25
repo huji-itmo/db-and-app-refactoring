@@ -11,7 +11,8 @@ public class Customer {
     @Id
     private Long id;
 
-    private String fullName;
+    private String firstName;
+    private String lastName;
     private String address;
     private String phone;
 
@@ -20,7 +21,7 @@ public class Customer {
     }
 
     public String getFullName() {
-        return fullName;
+        return lastName == null ? firstName : firstName + " " + lastName;
     }
 
     public String getAddress() {
